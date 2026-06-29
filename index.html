@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinCare Routine AI ✨ Ultimate Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <section id="welcome-screen" class="card fade-in">
+            <div class="badge">AI Beauty Assistant v4.0</div>
+            <h1>SkinCare Routine AI <span class="glow">Ultimate</span> ✨</h1>
+            <p class="subtitle">O assistente definitivo com passo a passo detalhado, gerenciador dos seus próprios produtos e tutoriais em vídeo.</p>
+            <button id="btn-start" class="btn-main">Iniciar Avaliação Completa</button>
+        </section>
+
+        <section id="form-screen" class="card hidden">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+            
+            <form id="skincare-form">
+                <div class="step active" data-step="1">
+                    <h2>Como podemos te chamar? 🌸</h2>
+                    <div class="form-group">
+                        <input type="text" id="user-name" placeholder="Digite seu nome..." autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Qual sua idade?</label>
+                        <input type="number" id="user-age" placeholder="Sua idade...">
+                    </div>
+                    <div class="form-group">
+                        <label>Qual seu peso aproximado? (Para a meta de água 💧)</label>
+                        <input type="number" id="user-weight" placeholder="Ex: 65">
+                    </div>
+                </div>
+
+                <div class="step" data-step="2">
+                    <h2>Qual o seu tipo de pele? 🔬</h2>
+                    <div class="grid-options">
+                        <div class="option-card" data-value="oleosa" data-target="skin-type">
+                            <h3>Oleosa</h3>
+                            <p>Brilho constante e poros visíveis.</p>
+                        </div>
+                        <div class="option-card" data-value="seca" data-target="skin-type">
+                            <h3>Seca</h3>
+                            <p>Sensação de repuxamento e descamação.</p>
+                        </div>
+                        <div class="option-card" data-value="mista" data-target="skin-type">
+                            <h3>Mista</h3>
+                            <p>Oleosa na zona T, seca nas bochechas.</p>
+                        </div>
+                        <div class="option-card" data-value="normal" data-target="skin-type">
+                            <h3>Normal</h3>
+                            <p>Equilibrada, nem muito seca nem oleosa.</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="skin-type">
+                </div>
+
+                <div class="step" data-step="3">
+                    <h2>Foco de Tratamento 🎯</h2>
+                    <div class="form-group">
+                        <label>Seu principal objetivo atual:</label>
+                        <select id="main-goal">
+                            <option value="acne">Combater Acne & Cravos</option>
+                            <option value="manchas">Clarear Manchas & Uniformizar</option>
+                            <option value="hidratacao">Hidratação & Linhas Finas</option>
+                            <option value="oleosidade">Reduzir Brilho & Poros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Sua pele costuma ficar vermelha ou irritar fácil?</label>
+                        <select id="skin-sensitive">
+                            <option value="nao">Não, é bem resistente</option>
+                            <option value="sim">Sim, é muito sensível</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="step" data-step="4">
+                    <h2>Hábitos Diários ⏳</h2>
+                    <div class="form-group">
+                        <label>Você usa maquiagem ou protetor com cor frequentemente?</label>
+                        <select id="user-makeup">
+                            <option value="sim">Sim, quase todo dia</option>
+                            <option value="nao">Raramente / Não uso</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quanto tempo quer dedicar à rotina?</label>
+                        <select id="routine-time">
+                            <option value="5">Fast Routine (5 min)</option>
+                            <option value="15">Full Care Routine (15 min)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" id="btn-prev" class="btn-nav hidden">Voltar</button>
+                    <button type="button" id="btn-next" class="btn-main">Avançar</button>
+                    <button type="submit" id="btn-submit" class="btn-main hidden">Gerar Meu Universo Skin ✨</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="result-screen" class="card hidden fade-in">
+            <div class="result-header">
+                <h2 id="user-diagnostic-title">Seu Diagnóstico</h2>
+                <div class="skin-badge" id="skin-status-badge">Carregando...</div>
+            </div>
+
+            <div class="water-widget">
+                <h4>💧 Rastreador de Hidratação Interna</h4>
+                <p>Sua meta diária: <strong id="water-target">0ml</strong></p>
+                <div class="water-progress">
+                    <div class="water-bar" id="water-bar" style="width: 0%;"></div>
+                </div>
+                <p style="font-size: 0.85rem; margin: 8px 0;"><span id="water-current">0</span>ml bebidos</p>
+                <button id="btn-add-water" class="btn-small">+ Copo de 250ml</button>
+                <button id="btn-reset-water" class="btn-small btn-clear">Resetar</button>
+            </div>
+
+            <div class="timer-widget">
+                <h4>⏱️ Timer Interativo</h4>
+                <div class="timer-display" id="timer-clock">01:00</div>
+                <button id="btn-timer" class="btn-small">Iniciar 60s</button>
+            </div>
+
+            <div class="tabs-container">
+                <button class="tab-btn active" data-tab="tab-morning">🌞 Dia</button>
+                <button class="tab-btn" data-tab="tab-night">🌙 Noite</button>
+                <button class="tab-btn" data-tab="tab-weekly">🗓️ Semanal</button>
+            </div>
+
+            <div class="tab-content active" id="tab-morning">
+                <div class="timeline" id="morning-timeline"></div>
+            </div>
+            <div class="tab-content" id="tab-night">
+                <div class="timeline" id="night-timeline"></div>
+            </div>
+            <div class="tab-content" id="tab-weekly">
+                <h4 style="margin-bottom: 10px;">📅 Cuidados Especiais da Semana</h4>
+                <div class="weekly-grid" id="weekly-schedule"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="text-left current-products-box">
+                <h3>👛 Meus Produtos Atuais</h3>
+                <p class="subtitle-small">Adicione os produtos que você já tem no seu armário para combinar com a rotina:</p>
+                <div class="my-products-form">
+                    <input type="text" id="my-prod-name" placeholder="Ex: Gel de Limpeza CeraVe...">
+                    <select id="my-prod-cat">
+                        <option value="Sabonete / Limpeza">Sabonete / Limpeza</option>
+                        <option value="Tônico">Tônico</option>
+                        <option value="Hidratante">Hidratante</option>
+                        <option value="Tratamento / Sérum">Tratamento / Sérum</option>
+                        <option value="Protetor Solar">Protetor Solar</option>
+                    </select>
+                    <button id="btn-add-my-product" class="btn-small" type="button">Adicionar</button>
+                </div>
+                <ul id="my-products-list" class="my-products-list">
+                    </ul>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="detail-box text-left">
+                <h3>📖 Manual Prático de Aplicação</h3>
+                <div id="application-instructions" class="instruction-content"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="text-left videos-box">
+                <h3>📺 Tutoriais e Práticas em Vídeo</h3>
+                <p class="subtitle-small">Assista a especialistas mostrando as técnicas corretas no YouTube:</p>
+                <div class="video-grid" id="video-links-container">
+                    </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="products-header">
+                <h3>🧴 Sugestões de Compra (Preço x Qualidade)</h3>
+                <div class="budget-filter">
+                    <button class="filter-btn active" data-budget="all">Todos</button>
+                    <button class="filter-btn" data-budget="econ">Econômicos</button>
+                    <button class="filter-btn" data-budget="prem">Premium</button>
+                </div>
+            </div>
+            <ul id="list-actives" class="products-list-styled"></ul>
+
+            <div class="divider"></div>
+
+            <div class="extra-box text-left">
+                <h4>🧰 Acessórios Úteis</h4>
+                <ul id="list-tools"></ul>
+            </div>
+
+            <button id="btn-restart" class="btn-main btn-secondary">Nova Avaliação</button>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
