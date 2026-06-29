@@ -13,6 +13,27 @@ document.addEventListener("DOMContentLoaded", () => {
     let metaAgua = 2000;
     let aguaConsumida = 0;
 
+    // VERIFICAÇÃO AO CARREGAR A PÁGINA: Se já existir diagnóstico salvo, pula o formulário
+    const dadosSalvos = localStorage.getItem("skincare_dados");
+    if (dadosSalvos) {
+        const dados = JSON.parse(dadosSalvos);
+        metaAgua = dados.weight * 35;
+        document.getElementById("water-target").innerText = `${metaAgua}ml`;
+        
+        // Recupera água consumida se houver
+        const aguaSalva = localStorage.getItem("skincare_agua");
+        if(aguaSalva) aguaConsumida = parseInt(aguaSalva);
+        
+        atualizarPainelAgua();
+        montarResultados(dados);
+        
+        // Recupera os produtos personalizados que estavam salvos
+        carregarMeusProdutosSalvos();
+
+        welcomeScreen.classList.add("hidden");
+        resultScreen.classList.remove("hidden");
+    }
+
     btnNext.addEventListener("click", () => { if (validarEtapa()) { currentStep++; updateProgress(); } });
     btnPrev.addEventListener("click", () => { currentStep--; updateProgress(); });
     document.getElementById("btn-start").addEventListener("click", () => { welcomeScreen.classList.add("hidden"); formScreen.classList.remove("hidden"); });
@@ -61,17 +82,30 @@ document.addEventListener("DOMContentLoaded", () => {
             time: document.getElementById("routine-time").value
         };
         
+        // SALVA NO LOCALSTORAGE: Guarda as preferências do perfil do usuário
+        localStorage.setItem("skincare_dados", JSON.stringify(dados));
+
         metaAgua = dados.weight * 35;
         document.getElementById("water-target").innerText = `${metaAgua}ml`;
         aguaConsumida = 0;
+        localStorage.setItem("skincare_agua", aguaConsumida);
+        
         atualizarPainelAgua();
         montarResultados(dados);
         formScreen.classList.add("hidden");
         resultScreen.classList.remove("hidden");
     });
 
-    document.getElementById("btn-add-water").addEventListener("click", () => { aguaConsumida += 250; atualizarPainelAgua(); });
-    document.getElementById("btn-reset-water").addEventListener("click", () => { aguaConsumida = 0; atualizarPainelAgua(); });
+    document.getElementById("btn-add-water").addEventListener("click", () => { 
+        aguaConsumida += 250; 
+        localStorage.setItem("skincare_agua", aguaConsumida); // Salva progresso da água
+        atualizarPainelAgua(); 
+    });
+    document.getElementById("btn-reset-water").addEventListener("click", () => { 
+        aguaConsumida = 0; 
+        localStorage.setItem("skincare_agua", aguaConsumida); // Salva reset da água
+        atualizarPainelAgua(); 
+    });
 
     function atualizarPainelAgua() {
         document.getElementById("water-current").innerText = aguaConsumida;
@@ -80,31 +114,54 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("water-bar").style.width = `${pct}%`;
     }
 
-    // NOVA FUNÇÃO: Adicionar Produtos do Próprio Usuário dinamicamente na lista
+    // LÓGICA DO LOCALSTORAGE PARA OS PRODUTOS DO USUÁRIO
     document.getElementById("btn-add-my-product").addEventListener("click", () => {
         const inputName = document.getElementById("my-prod-name");
         const selectCat = document.getElementById("my-prod-cat");
-        const listContainer = document.getElementById("my-products-list");
 
         if(!inputName.value.trim()) {
             alert("Por favor, digite o nome do seu produto! 💄");
             return;
         }
 
+        const novoProduto = {
+            id: Date.now(),
+            categoria: selectCat.value,
+            nome: inputName.value.trim()
+        };
+
+        // Salva na lista existente do LocalStorage
+        let produtosAtuais = JSON.parse(localStorage.getItem("skincare_meus_produtos")) || [];
+        produtosAtuais.push(novoProduto);
+        localStorage.setItem("skincare_meus_produtos", JSON.stringify(produtosAtuais));
+
+        renderizarUmProduto(novoProduto);
+        inputName.value = ""; 
+    });
+
+    function carregarMeusProdutosSalvos() {
+        document.getElementById("my-products-list").innerHTML = "";
+        let produtosAtuais = JSON.parse(localStorage.getItem("skincare_meus_produtos")) || [];
+        produtosAtuais.forEach(prod => renderizarUmProduto(prod));
+    }
+
+    function renderizarUmProduto(prod) {
+        const listContainer = document.getElementById("my-products-list");
         const li = document.createElement("li");
         li.innerHTML = `
-            <div><strong>[${selectCat.value}]</strong> ${inputName.value}</div>
-            <button class="remove-prod-btn" type="button">✖</button>
+            <div><strong>[${prod.categoria}]</strong> ${prod.nome}</div>
+            <button class="remove-prod-btn" type="button" data-id="${prod.id}">✖</button>
         `;
 
-        // Evento para remover o produto se clicar no X
         li.querySelector(".remove-prod-btn").addEventListener("click", function() {
+            let produtosAtuais = JSON.parse(localStorage.getItem("skincare_meus_produtos")) || [];
+            produtosAtuais = produtosAtuais.filter(p => p.id !== prod.id);
+            localStorage.setItem("skincare_meus_produtos", JSON.stringify(produtosAtuais));
             li.remove();
         });
 
         listContainer.appendChild(li);
-        inputName.value = ""; // Limpa o campo
-    });
+    }
 
     function montarResultados(dados) {
         document.getElementById("user-diagnostic-title").innerText = `Espaço de ${dados.name}`;
@@ -133,19 +190,19 @@ document.addEventListener("DOMContentLoaded", () => {
         let txtLimpeza = "", txtHidratacao = "", txtTratamento = "";
 
         if (dados.skinType === "oleosa" || dados.skinType === "mista") {
-            txtLimpeza = "Lave o rosto utilizando <strong>água fria a morna</strong> (nunca quente para evitar o efeito rebote). Massageie o gel de limpeza em movimentos circulares por 60 segundos, focando na Zona T.";
+            txtLimpeza = "Lave o rosto utilizando <strong>água fria a morna</strong>. Massageie o gel de limpeza em movimentos circulares por 60 segundos.";
             txtHidratacao = "Aplique uma quantidade equivalente a uma ervilha do hidratante em gel. Espalhe de dentro para fora com batidinhas suaves.";
         } else {
-            txtLimpeza = "Lave o rosto suavemente usando as pontas dos dedos e <strong>água fria</strong>. Não esfregue excessivamente com toalhas.";
+            txtLimpeza = "Lave o rosto suavemente usando as pontas dos dedos e <strong>água fria</strong>. Não esfregue excessivamente.";
             txtHidratacao = "Aqueça o creme nas mãos e pressione suavemente sobre as áreas secas da pele.";
         }
 
         if (dados.goal === "acne") {
-            txtTratamento = "À noite, aplique o Sérum de Ácido Salicílico <strong>apenas nas áreas com espinhas e cravos</strong>. Espere 3 minutos antes do próximo passo.";
+            txtTratamento = "À noite, aplique o Sérum de Ácido Salicílico <strong>apenas nas áreas com espinhas e cravos</strong>.";
         } else if (dados.goal === "manchas") {
-            txtTratamento = "Espalhe 3 gotas uniformemente. Faça movimentos ascendentes para estimular a circulação e o clareamento uniformizado.";
+            txtTratamento = "Espalhe 3 gotas uniformemente. Faça movimentos ascendentes para estimular a circulação.";
         } else {
-            txtTratamento = "Aplique o sérum de hialurônico com a <strong>pele levemente úmida</strong> para máxima retenção de água.";
+            txtTratamento = "Aplique o sérum de hialurônico com a <strong>pele levemente úmida</strong>.";
         }
 
         instrBox.innerHTML = `
@@ -154,7 +211,6 @@ document.addEventListener("DOMContentLoaded", () => {
             <p class="instruction-step-desc">🧴 <strong>Como Hidratar:</strong> ${txtHidratacao}</p>
         `;
 
-        // NOVA FUNÇÃO: Geração dos Links e Cards de Vídeos baseados nas necessidades do usuário
         const videoContainer = document.getElementById("video-links-container");
         let termoVideoPele = dados.skinType === "oleosa" ? "pele+oleosa" : "pele+seca";
         let termoVideoFoco = dados.goal === "acne" ? "combater+acne" : "clarear+manchas";
@@ -170,7 +226,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </a>
         `;
 
-        // Cronograma Semanal
         const weeklySchedule = document.getElementById("weekly-schedule");
         weeklySchedule.innerHTML = `
             <div class="weekly-day"><strong>Terça-Feira</strong><p>🌟 Aplicação de Máscara Cuidada</p></div>
@@ -178,7 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="weekly-day"><strong>Outros Dias</strong><p>Rotina Básica de Proteção</p></div>
         `;
 
-        // Recomendações de Compras
         bancoProdutosGlobal = [
             { tipo: "econ", cat: "Sabonete", nome: "Needs Controle de Oleosidade", preco: "R$ 24,00", link: "https://www.amazon.com.br/s?k=needs+controle+oleosidade" },
             { tipo: "prem", cat: "Sabonete", nome: "La Roche-Posay Effaclar Gel", preco: "R$ 79,00", link: "https://www.amazon.com.br/s?k=effaclar+gel+sabonete" },
@@ -238,10 +292,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1000);
     });
 
+    // LIMPEZA COMPLETA: Ao refazer o teste, limpa o LocalStorage para criar um novo perfil
     document.getElementById("btn-restart").addEventListener("click", () => {
         currentStep = 1;
+        localStorage.clear(); // Limpa tudo
         document.getElementById("skincare-form").reset();
-        document.getElementById("my-products-list").innerHTML = ""; // Reseta os produtos inseridos
+        document.getElementById("my-products-list").innerHTML = ""; 
         document.querySelectorAll(".option-card").forEach(c => c.classList.remove("selected"));
         resultScreen.classList.add("hidden");
         welcomeScreen.classList.remove("hidden");
